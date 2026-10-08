@@ -1,0 +1,110 @@
+/* Tema hijau (warna logo RS) + efek liquid glass.
+   Kontras teks dijaga tinggi; efek kaca hanya pada latar/kartu, bukan pada teks. */
+:root{
+  --spo-green:#006838;
+  --spo-green-dark:#00522c;
+  --bs-primary:#006838;
+  --bs-primary-rgb:0,104,56;
+  --bs-link-color:#006838;
+  --bs-link-color-rgb:0,104,56;
+  --bs-link-hover-color:#00522c;
+  --bs-link-hover-color-rgb:0,82,44;
+  --bs-body-color:#1b2b24;
+  --bs-body-color-rgb:27,43,36;
+  --glass-bg:rgba(255,255,255,.62);
+  --glass-border:rgba(255,255,255,.75);
+  --glass-filter:blur(18px) saturate(160%);
+}
+
+/* Latar: gradasi hijau lembut agar efek kaca terlihat */
+body{background:#e8f1ec;min-height:100vh;}
+body::before{
+  content:"";position:fixed;top:0;right:0;bottom:0;left:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(45vw 45vw at 8% 0%, rgba(0,150,84,.30), transparent 62%),
+    radial-gradient(38vw 38vw at 96% 18%, rgba(120,205,165,.40), transparent 62%),
+    radial-gradient(48vw 48vw at 62% 105%, rgba(0,104,56,.20), transparent 62%);
+}
+
+/* Navbar kaca */
+.glass-nav{
+  position:sticky;top:0;z-index:1030;
+  background:linear-gradient(135deg,rgba(0,104,56,.92),rgba(10,128,72,.84));
+  -webkit-backdrop-filter:var(--glass-filter);backdrop-filter:var(--glass-filter);
+  border-bottom:1px solid rgba(255,255,255,.35);
+  box-shadow:0 6px 24px rgba(0,60,35,.18), inset 0 1px 0 rgba(255,255,255,.35);
+}
+.glass-nav .navbar-brand{font-weight:600;color:#fff;}
+.glass-nav .navbar-nav{flex-wrap:wrap;gap:.15rem;}
+.glass-nav .nav-link{color:rgba(255,255,255,.88);border-radius:.6rem;padding:.4rem .8rem;transition:background-color .15s;}
+.glass-nav .nav-link:hover{color:#fff;background:rgba(255,255,255,.14);}
+.glass-nav .nav-link.active{color:#fff;background:rgba(255,255,255,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.35);}
+
+/* Kartu kaca */
+.card{
+  --bs-card-bg:transparent;
+  background:var(--glass-bg);
+  -webkit-backdrop-filter:var(--glass-filter);backdrop-filter:var(--glass-filter);
+  border:1px solid var(--glass-border);
+  border-radius:1rem;
+  box-shadow:0 8px 32px rgba(0,60,35,.10), inset 0 1px 0 rgba(255,255,255,.85);
+  overflow:hidden;
+}
+
+/* Tabel: tetap solid-terbaca di atas kartu kaca */
+.table{
+  --bs-table-bg:transparent;
+  --bs-table-striped-bg:rgba(0,104,56,.07);
+  --bs-table-hover-bg:rgba(0,104,56,.14);
+  --bs-table-border-color:rgba(0,104,56,.12);
+}
+.table-dark{--bs-table-bg:#0a5b35;--bs-table-color:#fff;--bs-table-border-color:rgba(255,255,255,.15);}
+
+/* Tombol */
+.btn{border-radius:.65rem;transition:background-color .15s,box-shadow .15s,transform .15s;}
+.btn-primary{
+  --bs-btn-bg:#006838;--bs-btn-border-color:#006838;
+  --bs-btn-hover-bg:#00552e;--bs-btn-hover-border-color:#00552e;
+  --bs-btn-active-bg:#004a28;--bs-btn-active-border-color:#004a28;
+  --bs-btn-disabled-bg:#006838;--bs-btn-disabled-border-color:#006838;
+  --bs-btn-focus-shadow-rgb:0,104,56;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.30), 0 3px 8px rgba(0,104,56,.25);
+}
+.btn-outline-secondary{
+  --bs-btn-color:#35564a;--bs-btn-border-color:rgba(0,104,56,.35);
+  --bs-btn-hover-color:#00522c;--bs-btn-hover-bg:rgba(0,104,56,.10);--bs-btn-hover-border-color:rgba(0,104,56,.5);
+  --bs-btn-active-color:#00522c;--bs-btn-active-bg:rgba(0,104,56,.18);--bs-btn-active-border-color:rgba(0,104,56,.5);
+  background:rgba(255,255,255,.55);
+}
+.btn-secondary{
+  --bs-btn-bg:#5b7468;--bs-btn-border-color:#5b7468;
+  --bs-btn-hover-bg:#4a6156;--bs-btn-hover-border-color:#4a6156;
+  --bs-btn-active-bg:#3f544a;--bs-btn-active-border-color:#3f544a;
+}
+
+/* Form */
+.form-control,.form-select{
+  background-color:rgba(255,255,255,.80);
+  border:1px solid rgba(0,104,56,.25);
+  border-radius:.65rem;
+}
+.form-control:focus,.form-select:focus{
+  background-color:#fff;border-color:#2f8f62;
+  box-shadow:0 0 0 .25rem rgba(0,104,56,.22);
+}
+.form-check-input{background-color:rgba(255,255,255,.9);border-color:rgba(0,104,56,.5);}
+.form-check-input:checked{background-color:#006838;border-color:#006838;}
+.form-check-input:focus{border-color:#2f8f62;box-shadow:0 0 0 .25rem rgba(0,104,56,.22);}
+.row.border{background:rgba(255,255,255,.5);border-color:rgba(0,104,56,.22)!important;border-radius:.75rem!important;}
+.alert{border-radius:.8rem;}
+
+/* Fallback: browser tanpa backdrop-filter, atau pengguna meminta transparansi dikurangi */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .card{background:rgba(255,255,255,.95);}
+  .glass-nav{background:#006838;}
+}
+@media (prefers-reduced-transparency:reduce){
+  .card{background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none;}
+  .glass-nav{background:#006838;-webkit-backdrop-filter:none;backdrop-filter:none;}
+}
+@media (prefers-reduced-motion:reduce){ .btn,.nav-link{transition:none;} }

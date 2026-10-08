@@ -42,12 +42,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->beginTransaction();
             $path = g($doc, 'file_path', '');
             if ($has) {
-                $newPath = "$folder/" . slug($nama) . '-' . time() . '.pdf';
+                $newPath = "$folder/" . unique_name(UPLOAD_DIR . $folder, clean_filename($f['name']), $path ? UPLOAD_DIR . $path : '');
                 move_uploaded_file($f['tmp_name'], UPLOAD_DIR . $newPath);
-                if ($path) @unlink(UPLOAD_DIR . $path);
+                if ($path && $path !== $newPath) @unlink(UPLOAD_DIR . $path);
                 $path = $newPath;
             } elseif ($id && $kid != $doc['unit_spo_id']) {   // unit_spo berubah -> pindahkan file
-                $newPath = "$folder/" . basename($path);
+                $newPath = "$folder/" . unique_name(UPLOAD_DIR . $folder, basename($path));
                 rename(UPLOAD_DIR . $path, UPLOAD_DIR . $newPath);
                 $path = $newPath;
             }

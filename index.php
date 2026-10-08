@@ -28,13 +28,19 @@ if ($q !== '') {
               OR EXISTS (SELECT 1 FROM dokumen_unit y JOIN unit u2 ON u2.id=y.unit_id WHERE y.dokumen_id=d.id AND u2.nama LIKE ?))";
     array_push($p, "%$q%", "%$q%", "%$q%");
 }
-if ($kat)      { $sql .= " AND d.unit_spo_id = ?"; $p[] = $kat; }
+$condSpo = '';
+$condUnit = '';
+if ($kat) { $condSpo = "d.unit_spo_id = ?"; $p[] = $kat; }
 if ($units) {
     $units = array_values(array_unique($units));
-    // Dokumen harus terkait dengan SEMUA unit yang dipilih
-    $sql .= " AND (SELECT COUNT(DISTINCT x.unit_id) FROM dokumen_unit x WHERE x.dokumen_id=d.id AND x.unit_id IN (" . implode(',', array_fill(0, count($units), '?')) . ")) = ?";
-    $p = array_merge($p, $units, [count($units)]);
+    // Beberapa Unit Terkait: dokumen harus terkait dengan SEMUA unit yang dipilih
+    $condUnit = "(SELECT COUNT(DISTINCT x.unit_id) FROM dokumen_unit x WHERE x.dokumen_id=d.id AND x.unit_id IN (" . implode(',', array_fill(0, count($units), '?')) . ")) = ?";
+    $p = array_merge($p, $units, array(count($units)));
 }
+// Jika Unit SPO dan Unit Terkait sama-sama dipilih -> logika ATAU
+if ($condSpo && $condUnit)  $sql .= " AND ($condSpo OR $condUnit)";
+elseif ($condSpo)           $sql .= " AND $condSpo";
+elseif ($condUnit)          $sql .= " AND $condUnit";
 $sql .= " ORDER BY d.created_at DESC";
 $st = $pdo->prepare($sql); $st->execute($p); $rows = $st->fetchAll();
 
@@ -74,7 +80,7 @@ layout_top('Beranda'); ?>
           </div></div>
         <?php endforeach; ?>
       </div>
-      <div class="form-text">Hanya menampilkan dokumen yang terkait dengan semua unit yang dipilih.</div>
+      <div class="form-text">Jika Unit SPO dan Unit Terkait sama-sama dipilih, dokumen tampil bila cocok dengan Unit SPO <b>ATAU</b> Unit Terkait. Jika beberapa Unit Terkait dipilih, dokumen harus terkait dengan semuanya.</div>
     </div>
   </div>
 </form>
