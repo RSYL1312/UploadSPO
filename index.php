@@ -99,7 +99,7 @@ layout_top('Beranda'); ?>
       <td><?= e($r['unit_spo']) ?></td>
       <td><?= e($r['nama_dokumen']) ?></td>
       <td><?= e($r['units'] ?: '-') ?></td>
-      <td><a href="<?= BASE ?>lihat.php?id=<?= $r['id'] ?>" target="_blank" class="btn btn-sm btn-outline-danger" title="Lihat &amp; cetak / unduh PDF">PDF</a></td>
+      <td><a href="<?= BASE ?>download.php?id=<?= $r['id'] ?>&amp;inline=1" target="_blank" class="btn btn-sm btn-outline-danger btn-pdf" title="Tampilkan print preview">PDF</a></td>
       <?php if (is_admin()): ?>
       <td class="text-nowrap">
         <a href="dokumen_form.php?id=<?= $r['id'] ?>" class="btn btn-sm btn-warning">EDIT</a>
@@ -113,4 +113,34 @@ layout_top('Beranda'); ?>
   <?php endforeach; ?>
   </tbody>
 </table></div></div>
+<script>
+// Klik tombol PDF -> langsung tampilkan print preview bawaan browser (tanpa halaman perantara).
+// Tanpa JavaScript, tombol tetap membuka PDF di tab baru.
+(function () {
+  var frame = null;
+  document.addEventListener('click', function (ev) {
+    var a = ev.target;
+    while (a && a !== document && !(a.tagName === 'A' && (' ' + a.className + ' ').indexOf(' btn-pdf ') > -1)) a = a.parentNode;
+    if (!a || a === document) return;
+    ev.preventDefault();
+    if (a.classList.contains('disabled')) return;
+    var url = a.getAttribute('href'), label = a.textContent, done = false;
+    a.textContent = 'Memuat...'; a.classList.add('disabled');
+    if (frame && frame.parentNode) frame.parentNode.removeChild(frame);
+    frame = document.createElement('iframe');
+    frame.setAttribute('aria-hidden', 'true');
+    frame.style.cssText = 'position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0;pointer-events:none';
+    frame.onload = function () {
+      if (done) return; done = true;
+      setTimeout(function () {
+        try { frame.contentWindow.focus(); frame.contentWindow.print(); }
+        catch (e) { window.open(url, '_blank'); }   // cadangan: buka PDF di tab baru
+        a.textContent = label; a.classList.remove('disabled');
+      }, 500);
+    };
+    frame.src = url;
+    document.body.appendChild(frame);
+  });
+})();
+</script>
 <?php layout_bottom();

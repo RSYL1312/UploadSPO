@@ -1,4 +1,9 @@
+# Berkas hanya boleh diakses lewat aplikasi (download.php), bukan lewat alamat file langsung
 Options -Indexes
-<FilesMatch "\.(php|phtml)$">
-Require all denied
-</FilesMatch>
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>

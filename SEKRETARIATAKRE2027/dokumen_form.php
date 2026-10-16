@@ -107,7 +107,7 @@ layout_top($doc ? 'Edit Dokumen' : 'Tambah Dokumen'); ?>
   <div class="mb-3">
     <label class="form-label">File PDF (maks. 5 MB)</label>
     <input type="file" name="pdf" accept="application/pdf" class="form-control" <?= $doc ? '' : 'required' ?>>
-    <?php if ($doc): ?><div class="form-text">File saat ini: <a href="<?= BASE ?>lihat.php?id=<?= (int)$doc['id'] ?>" target="_blank"><?= e(basename($doc['file_path'])) ?></a>. Kosongkan jika tidak ingin mengganti.</div><?php endif; ?>
+    <?php if ($doc): ?><div class="form-text">File saat ini: <a href="<?= BASE ?>download.php?id=<?= (int)$doc['id'] ?>&amp;inline=1" target="_blank"><?= e(basename($doc['file_path'])) ?></a>. Kosongkan jika tidak ingin mengganti.</div><?php endif; ?>
   </div>
   <div><button class="btn btn-primary">Simpan</button> <a href="index.php" class="btn btn-secondary">Batal</a></div>
 </form>
