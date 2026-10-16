@@ -1,6 +1,6 @@
 <?php
 // Download PDF dengan nama file sama persis dengan Nama Dokumen
-require 'config.php';
+require __DIR__ . '/config.php';
 
 $id = (int)g($_GET, 'id', 0);
 $s = $pdo->prepare("SELECT nama_dokumen, file_path FROM dokumen WHERE id=?");
@@ -23,7 +23,9 @@ $fallback = preg_replace('/[^\x20-\x7E]|%/', '_', $nama);   // untuk browser lam
 
 while (ob_get_level()) ob_end_clean();
 header('Content-Type: application/pdf');
-header('Content-Disposition: attachment; filename="' . $fallback . '"; filename*=UTF-8\'\'' . rawurlencode($nama));
+$disp = g($_GET, 'inline') ? 'inline' : 'attachment';   // inline = untuk preview/cetak
+header('X-Frame-Options: SAMEORIGIN');
+header('Content-Disposition: ' . $disp . '; filename="' . $fallback . '"; filename*=UTF-8\'\'' . rawurlencode($nama));
 header('Content-Length: ' . filesize($file));
 header('X-Content-Type-Options: nosniff');
 readfile($file);

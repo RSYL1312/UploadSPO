@@ -1,4 +1,5 @@
 <?php
+ini_set('session.cookie_httponly', 1);
 session_start();
 try {
     $pdo = new PDO('mysql:host=localhost;dbname=db_spo;charset=utf8mb4', 'root', '', [
@@ -33,6 +34,38 @@ function unique_name($dir, $name, $ignore = '') {
     }
     return $try;
 }
+// ---------- Area admin tanpa login ----------
+// Admin mengakses folder rahasia SEKRETARIATAKRE2027; file di folder itu mendefinisikan
+// ADMIN_AREA sebelum memuat config.php. Halaman biasa (folder utama) hanya bisa melihat & mengunduh.
+define('BASE', defined('ADMIN_AREA') ? '../' : '');   // awalan URL menuju folder utama
+function is_admin() { return defined('ADMIN_AREA'); }
+function require_admin() {
+    if (!is_admin()) { http_response_code(403); die('Akses ditolak.'); }
+}
+function safe_equals($a, $b) {
+    $a = (string)$a; $b = (string)$b;
+    if (strlen($a) !== strlen($b)) return false;
+    $r = 0;
+    for ($i = 0; $i < strlen($a); $i++) $r |= ord($a[$i]) ^ ord($b[$i]);
+    return $r === 0;
+}
+function csrf_token() {
+    if (empty($_SESSION['csrf'])) {
+        $_SESSION['csrf'] = function_exists('openssl_random_pseudo_bytes')
+            ? bin2hex(openssl_random_pseudo_bytes(16)) : md5(uniqid(mt_rand(), true));
+    }
+    return $_SESSION['csrf'];
+}
+function csrf_field() { return '<input type="hidden" name="csrf" value="' . e(csrf_token()) . '">'; }
+function csrf_check() {
+    if (empty($_POST) && !empty($_SERVER['CONTENT_LENGTH'])) {
+        die('Ukuran data yang dikirim melebihi batas server (post_max_size di php.ini). Kecilkan ukuran file lalu coba lagi.');
+    }
+    if (!isset($_POST['csrf']) || !isset($_SESSION['csrf']) || !safe_equals($_SESSION['csrf'], $_POST['csrf'])) {
+        http_response_code(400);
+        die('Permintaan tidak valid atau sesi telah berakhir. Silakan muat ulang halaman.');
+    }
+}
 function e($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 function slug($s) { return trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($s)), '-') ?: 'file'; }
 function flash($msg = null, $type = 'success') {
@@ -45,23 +78,27 @@ function layout_top($title) { ?>
 <!DOCTYPE html>
 <html lang="id"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title><?= e($title) ?> - SPO</title>
-<link rel="icon" type="image/png" href="favicon/logors.png">
+<title><?= is_admin() ? 'SEKRETARIAT - ' . e($title) : e($title) . ' - SPO' ?></title>
+<link rel="icon" type="image/svg+xml" href="<?= BASE ?>favicon/favicon.svg">
+<link rel="icon" type="image/png" href="<?= BASE ?>favicon/favicon.png">
+<link rel="shortcut icon" href="<?= BASE ?>favicon/favicon.ico">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="assets/style.css" rel="stylesheet">
+<link href="<?= BASE ?>assets/style.css" rel="stylesheet">
 <meta name="theme-color" content="#006838">
+<?php if (is_admin()): ?><meta name="robots" content="noindex,nofollow"><?php endif; ?>
 </head><body>
 <nav class="navbar navbar-expand navbar-dark glass-nav mb-4"><div class="container">
   <a class="navbar-brand" href="index.php">Dokumen SPO</a>
+<?php if (is_admin()): ?>
   <div class="navbar-nav">
 <?php
     $cur = basename($_SERVER['SCRIPT_NAME']);
-    $menu = array(
-        array('index.php', 'Beranda', ''),
-        array('dokumen_form.php', 'Tambah Dokumen', ''),
-        array('master.php?t=unit_spo', 'Kelola Unit SPO', 'unit_spo'),
-        array('master.php?t=unit', 'Kelola Unit Terkait', 'unit'),
-    );
+    $menu = array(array('index.php', 'Beranda', ''));
+    if (is_admin()) {
+        $menu[] = array('dokumen_form.php', 'Tambah Dokumen', '');
+        $menu[] = array('master.php?t=unit_spo', 'Kelola Unit SPO', 'unit_spo');
+        $menu[] = array('master.php?t=unit', 'Kelola Unit Terkait', 'unit');
+    }
     foreach ($menu as $m) {
         $file = explode('?', $m[0]); $file = $file[0];
         if ($file === 'index.php')            $on = ($cur === 'index.php' || ($cur === 'dokumen_form.php' && g($_GET, 'id')));
@@ -71,6 +108,13 @@ function layout_top($title) { ?>
     }
 ?>
   </div>
+<?php endif; ?>
+<?php if (is_admin()): ?>
+  <div class="navbar-nav ms-auto align-items-center">
+    <span class="navbar-text text-white-50 me-1">Admin Sekretariat</span>
+    <a class="nav-link" href="../index.php">Halaman Pengguna</a>
+  </div>
+<?php endif; ?>
 </div></nav>
 <div class="container pb-5">
 <?= flash() ?>

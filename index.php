@@ -1,8 +1,9 @@
 <?php
-require 'config.php';
+require __DIR__ . '/config.php';
 
 // Hapus dokumen
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['hapus'])) {
+    require_admin(); csrf_check();
     $id = (int)$_POST['hapus'];
     $s = $pdo->prepare("SELECT file_path FROM dokumen WHERE id=?"); $s->execute([$id]);
     if ($d = $s->fetch()) {
@@ -50,7 +51,7 @@ $unitAll  = $pdo->query("SELECT * FROM unit ORDER BY nama")->fetchAll();
 layout_top('Beranda'); ?>
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h4 class="mb-0">Daftar Dokumen SPO</h4>
-  <a href="dokumen_form.php" class="btn btn-primary">+ Tambah Dokumen</a>
+  <?php if (is_admin()): ?><a href="dokumen_form.php" class="btn btn-primary">+ Tambah Dokumen</a><?php endif; ?>
 </div>
 
 <form method="get" class="card card-body mb-3">
@@ -80,7 +81,7 @@ layout_top('Beranda'); ?>
           </div></div>
         <?php endforeach; ?>
       </div>
-      <div class="form-text">Jika Unit SPO dan Unit Terkait sama-sama dipilih, dokumen tampil bila cocok dengan Unit SPO <b>ATAU</b> Unit Terkait. Jika beberapa Unit Terkait dipilih, dokumen harus terkait dengan semuanya.</div>
+      <div class="form-text">Jika Unit SPO dan Unit Terkait sama-sama dipilih, dokumen tampil bila cocok dengan Unit SPO <b>atau</b> Unit Terkait. Jika beberapa Unit Terkait dipilih, dokumen harus terkait dengan semuanya.</div>
     </div>
   </div>
 </form>
@@ -88,24 +89,26 @@ layout_top('Beranda'); ?>
 <div class="card"><div class="table-responsive">
 <table class="table table-striped table-hover align-middle mb-0">
   <thead class="table-dark"><tr>
-    <th>No</th><th>Unit SPO</th><th>Nama Dokumen</th><th>Unit Terkait</th><th>Tanggal Input</th><th>Download</th><th>Aksi</th>
+    <th>No</th><th>Unit SPO</th><th>Nama Dokumen</th><th>Unit Terkait</th><th>Download</th><?php if (is_admin()): ?><th>Aksi</th><?php endif; ?>
   </tr></thead>
   <tbody>
-  <?php if (!$rows): ?><tr><td colspan="7" class="text-center text-muted py-4">Tidak ada dokumen.</td></tr><?php endif; ?>
+  <?php if (!$rows): ?><tr><td colspan="<?= is_admin() ? 6 : 5 ?>" class="text-center text-muted py-4">Tidak ada dokumen.</td></tr><?php endif; ?>
   <?php foreach ($rows as $i => $r): ?>
     <tr>
       <td><?= $i + 1 ?></td>
       <td><?= e($r['unit_spo']) ?></td>
       <td><?= e($r['nama_dokumen']) ?></td>
       <td><?= e($r['units'] ?: '-') ?></td>
-      <td><?= date('d-m-Y', strtotime($r['created_at'])) ?></td>
-      <td><a href="download.php?id=<?= $r['id'] ?>" class="btn btn-sm btn-outline-danger">PDF</a></td>
+      <td><a href="<?= BASE ?>lihat.php?id=<?= $r['id'] ?>" target="_blank" class="btn btn-sm btn-outline-danger" title="Lihat &amp; cetak / unduh PDF">PDF</a></td>
+      <?php if (is_admin()): ?>
       <td class="text-nowrap">
         <a href="dokumen_form.php?id=<?= $r['id'] ?>" class="btn btn-sm btn-warning">EDIT</a>
         <form method="post" class="d-inline" onsubmit="return confirm('Hapus dokumen ini?')">
+          <?= csrf_field() ?>
           <button name="hapus" value="<?= $r['id'] ?>" class="btn btn-sm btn-danger">HAPUS</button>
         </form>
       </td>
+      <?php endif; ?>
     </tr>
   <?php endforeach; ?>
   </tbody>
